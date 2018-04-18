@@ -36,7 +36,6 @@ import org.ow2.proactive_grid_cloud_portal.rm.client.RMImages;
 
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ContextMenuEvent;
-import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.Image;
@@ -57,7 +56,6 @@ public class Tile extends Image {
 
     private Layout hover;
 
-    @UiField
     public Label hoverLabel;
 
     private boolean dirty = true;
@@ -66,7 +64,7 @@ public class Tile extends Image {
 
     private CompactFlowPanel panel;
 
-    public Tile(CompactView compactView, CompactFlowPanel panel, NodeSource ns) {
+    Tile(CompactView compactView, CompactFlowPanel panel, NodeSource ns) {
         super(ns.getIcon());
         this.nodesource = ns;
         this.compactView = compactView;
