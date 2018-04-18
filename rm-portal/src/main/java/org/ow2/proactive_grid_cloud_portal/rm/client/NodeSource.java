@@ -61,10 +61,6 @@ public class NodeSource {
 
     private String eventType;
 
-    public NodeSource(String sourceName) {
-        this.sourceName = sourceName;
-    }
-
     NodeSource(String sourceName, String sourceDescription, String nodeSourceAdmin, String nodeSourceStatus,
             String eventType) {
         this.sourceName = sourceName;
@@ -154,10 +150,6 @@ public class NodeSource {
 
     public NodeSourceStatus getNodeSourceStatus() {
         return nodeSourceStatus;
-    }
-
-    public void setNodeSourceStatus(NodeSourceStatus nodeSourceStatus) {
-        this.nodeSourceStatus = nodeSourceStatus;
     }
 
     public String getIcon() {
