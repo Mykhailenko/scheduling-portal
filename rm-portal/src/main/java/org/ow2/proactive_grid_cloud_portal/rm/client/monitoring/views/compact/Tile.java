@@ -56,7 +56,7 @@ public class Tile extends Image {
 
     private Layout hover;
 
-    public Label hoverLabel;
+    private Label hoverLabel;
 
     private boolean dirty = true;
 
@@ -64,7 +64,7 @@ public class Tile extends Image {
 
     private CompactFlowPanel panel;
 
-    public Tile(CompactView compactView, CompactFlowPanel panel, NodeSource ns) {
+    Tile(CompactView compactView, CompactFlowPanel panel, NodeSource ns) {
         super(ns.getIcon());
         this.nodesource = ns;
         this.compactView = compactView;
