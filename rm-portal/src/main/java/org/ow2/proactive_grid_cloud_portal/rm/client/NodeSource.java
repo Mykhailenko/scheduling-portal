@@ -320,12 +320,6 @@ public class NodeSource {
                 this.eventType = eventType;
             }
 
-            public Node(String sourceName, String hostName, String nodeUrl) {
-                this.sourceName = sourceName;
-                this.hostName = hostName;
-                this.nodeUrl = nodeUrl;
-            }
-
             Node(Node t) {
                 this.nodeUrl = t.nodeUrl;
                 this.nodeState = t.nodeState;
