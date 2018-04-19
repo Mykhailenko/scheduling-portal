@@ -31,6 +31,7 @@ import static org.ow2.proactive_grid_cloud_portal.rm.client.NodeSource.Host.*;
 import java.util.Optional;
 
 import org.ow2.proactive_grid_cloud_portal.common.client.JSUtil;
+import org.ow2.proactive_grid_cloud_portal.rm.client.ContextMenu;
 import org.ow2.proactive_grid_cloud_portal.rm.client.NodeSource;
 import org.ow2.proactive_grid_cloud_portal.rm.client.RMImages;
 
@@ -42,8 +43,6 @@ import com.google.gwt.user.client.ui.Image;
 import com.smartgwt.client.widgets.Label;
 import com.smartgwt.client.widgets.layout.Layout;
 import com.smartgwt.client.widgets.menu.Menu;
-import com.smartgwt.client.widgets.menu.MenuItem;
-import com.smartgwt.client.widgets.menu.MenuItemSeparator;
 
 
 public class Tile extends Image {
@@ -54,9 +53,11 @@ public class Tile extends Image {
 
     private NodeSource nodesource;
 
+    private Object releated;
+
     private Layout hover;
 
-    public Label hoverLabel;
+    private Label hoverLabel;
 
     private boolean dirty = true;
 
@@ -67,6 +68,7 @@ public class Tile extends Image {
     Tile(CompactView compactView, CompactFlowPanel panel, NodeSource ns) {
         super(ns.getIcon());
         this.nodesource = ns;
+        this.releated = ns;
         this.compactView = compactView;
         this.panel = panel;
         init();
@@ -76,6 +78,7 @@ public class Tile extends Image {
         super(host.isVirtual() ? RMImages.instance.host_virtual_16().getSafeUri().asString()
                                : RMImages.instance.host_16().getSafeUri().asString());
         this.host = host;
+        this.releated = host;
         this.compactView = compactView;
         this.panel = panel;
         init();
@@ -84,6 +87,7 @@ public class Tile extends Image {
     Tile(CompactView compactView, CompactFlowPanel panel, Host.Node node) {
         super(node.getIcon());
         this.node = node;
+        this.releated = node;
         this.compactView = compactView;
         this.panel = panel;
         init();
@@ -94,80 +98,7 @@ public class Tile extends Image {
         switch (DOM.eventGetType(event)) {
             case Event.ONCONTEXTMENU:
 
-                String lockItemImageResource = RMImages.instance.node_add_16_locked().getSafeUri().asString();
-                String unlockItemImageResource = RMImages.instance.node_add_16().getSafeUri().asString();
-                String deployItemImageResource = RMImages.instance.nodesource_deployed().getSafeUri().asString();
-                String undeployItemImageResource = RMImages.instance.nodesource_undeployed().getSafeUri().asString();
-                String editItemImageResource = RMImages.instance.nodesource_edit().getSafeUri().asString();
-
-                if (node != null) {
-                    compactView.getController().selectNode(node);
-                    lockItemImageResource = node.getIconLocked();
-                    unlockItemImageResource = node.getIconUnlocked();
-                } else if (host != null) {
-                    compactView.getController().selectHost(host);
-                } else if (nodesource != null) {
-                    compactView.getController().selectNodeSource(nodesource);
-                }
-
-                Menu menu = new Menu();
-                menu.setShowShadow(true);
-                menu.setShadowDepth(10);
-
-                MenuItem removeItem = new MenuItem("Remove",
-                                                   RMImages.instance.node_remove_16().getSafeUri().asString());
-                removeItem.addClickHandler(event15 -> compactView.getController().removeNodes());
-
-                MenuItem lockItem = new MenuItem("Lock", lockItemImageResource);
-                lockItem.addClickHandler(event14 -> compactView.getController().lockNodes());
-
-                MenuItem unlockItem = new MenuItem("Unlock", unlockItemImageResource);
-                unlockItem.addClickHandler(event13 -> compactView.getController().unlockNodes());
-
-                MenuItem deployItem = new MenuItem("Deploy", deployItemImageResource);
-                deployItem.addClickHandler(event12 -> compactView.getController().deployNodeSource());
-
-                MenuItem undeployItem = new MenuItem("Undeploy", undeployItemImageResource);
-                undeployItem.addClickHandler(event1 -> compactView.getController().undeployNodeSource());
-
-                MenuItem editItem = new MenuItem("Edit", editItemImageResource);
-                String nodeSourceName = nodesource == null ? "" : nodesource.getSourceName();
-                editItem.addClickHandler(event1 -> compactView.getController().editNodeSource(nodeSourceName));
-
-                if (node != null) {
-                    if (node.isLocked()) {
-                        lockItem.setEnabled(false);
-                        unlockItem.setEnabled(true);
-                    } else {
-                        lockItem.setEnabled(true);
-                        unlockItem.setEnabled(false);
-                    }
-                }
-
-                if (nodesource != null) {
-                    switch (nodesource.getNodeSourceStatus()) {
-                        case NODES_DEPLOYED:
-                            enableItems(new MenuItem[] { undeployItem });
-                            disableItems(new MenuItem[] { deployItem, editItem });
-                            break;
-                        case NODES_UNDEPLOYED:
-                            enableItems(new MenuItem[] { deployItem, editItem });
-                            disableItems(new MenuItem[] { undeployItem });
-                            break;
-                        default:
-                            disableItems(new MenuItem[] { deployItem, undeployItem, editItem });
-                    }
-                } else {
-                    disableItems(new MenuItem[] { deployItem, undeployItem, editItem });
-                }
-
-                menu.setItems(deployItem,
-                              undeployItem,
-                              editItem,
-                              new MenuItemSeparator(),
-                              lockItem,
-                              unlockItem,
-                              removeItem);
+                final Menu menu = ContextMenu.createContextMenuFromCompactView(compactView.getController(), releated);
 
                 menu.moveTo(event.getClientX(), event.getClientY());
                 menu.show();
@@ -178,18 +109,6 @@ public class Tile extends Image {
             default:
                 super.onBrowserEvent(event);
                 break;
-        }
-    }
-
-    private void disableItems(MenuItem[] items) {
-        for (MenuItem item : items) {
-            item.setEnabled(false);
-        }
-    }
-
-    private void enableItems(MenuItem[] items) {
-        for (MenuItem item : items) {
-            item.setEnabled(true);
         }
     }
 
@@ -205,6 +124,7 @@ public class Tile extends Image {
         this.hover.setWidth(150);
         this.hover.setHeight(60);
         this.hover.setPadding(5);
+        this.hoverLabel = new Label();
         this.hover.addMember(this.hoverLabel);
 
         addDomHandler();
@@ -264,12 +184,14 @@ public class Tile extends Image {
 
     public void refresh(Node n) {
         this.node = n;
+        this.releated = n;
         this.setUrl(n.getIcon());
         this.setHoverNodeLabel();
     }
 
     public void refresh(NodeSource ns) {
         this.nodesource = ns;
+        this.releated = ns;
         this.setUrl(ns.getIcon());
     }
 
