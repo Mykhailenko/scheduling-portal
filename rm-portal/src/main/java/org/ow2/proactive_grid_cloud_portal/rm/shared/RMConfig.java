@@ -116,6 +116,12 @@ public class RMConfig extends Config {
 
     public static final String RM_JMX_PREFIX_DEFAULT = "service:jmx:rmi:///jndi/rmi://";
 
+    public static final String RM_AUTOUITEST_TARGET_URL = "rm.autouitest.target.url";
+
+    public static final String RM_AUTOUITEST_TARGET_LOGIN = "rm.autouitest.target.login";
+
+    public static final String RM_AUTOUITEST_TARGET_PASSWORD = "rm.autouitest.target.password";
+
     private static RMConfig instance = null;
 
     /**
@@ -248,5 +254,21 @@ public class RMConfig extends Config {
 
     public String getRMUrl() {
         return properties.get(RM_URL);
+    }
+
+    /**
+     * AUI stands for automatic UI test
+     * @return
+     */
+    public String getAUITargetUrl() {
+        return properties.get(RM_AUTOUITEST_TARGET_URL);
+    }
+
+    public String getAUITargetLogin() {
+        return properties.get(RM_AUTOUITEST_TARGET_LOGIN);
+    }
+
+    public String getAUITargetPassword() {
+        return properties.get(RM_AUTOUITEST_TARGET_PASSWORD);
     }
 }

@@ -420,13 +420,15 @@ public class RMPage implements LogListener {
 
         ToolStripButton nsButton = new ToolStripButton("Add Node Source");
         nsButton.setIcon(RMImages.instance.nodesource_deployed().getSafeUri().asString());
-        nsButton.setTooltip("Create and add a new Node Source");
+        nsButton.setTooltip(Tooltips.SHOW_ADD_NODESOURCE_MENU);
         nsButton.addClickHandler(e -> showNodeSourceCreationWindow());
+        nsButton.setID("add-node-source-button");
 
         errorButton = new ToolStripButton("<strong>Error</strong>",
                                           Images.instance.net_error_16().getSafeUri().asString());
         errorButton.setBackgroundColor("#ffbbbb");
         errorButton.addClickHandler(e -> showLogWindow());
+
         errorButton.hide();
 
         ToolStripButton studioLinkButton = toolButtonsRender.getStudioLinkButton();

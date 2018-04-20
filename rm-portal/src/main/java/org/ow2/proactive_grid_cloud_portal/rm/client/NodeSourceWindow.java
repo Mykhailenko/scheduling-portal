@@ -123,6 +123,7 @@ public abstract class NodeSourceWindow {
 
         this.infrastructureSelectItem = new SelectItem(INFRASTRUCTURE_FORM_KEY, "Infrastructure");
         this.infrastructureSelectItem.setRequired(true);
+
         this.policySelectItem = new SelectItem(POLICY_FORM_KEY, "Policy");
         this.policySelectItem.setRequired(true);
 
