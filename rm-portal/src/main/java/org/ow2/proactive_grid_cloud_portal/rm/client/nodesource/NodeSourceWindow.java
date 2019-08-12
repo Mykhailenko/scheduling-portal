@@ -39,6 +39,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.ow2.proactive_grid_cloud_portal.common.client.CredentialsWindow;
 import org.ow2.proactive_grid_cloud_portal.common.client.Images;
@@ -68,6 +69,8 @@ import com.smartgwt.client.widgets.layout.Layout;
 import com.smartgwt.client.widgets.layout.LayoutSpacer;
 import com.smartgwt.client.widgets.layout.VLayout;
 import com.smartgwt.client.widgets.layout.VStack;
+
+import sun.rmi.runtime.Log;
 
 
 public abstract class NodeSourceWindow {
@@ -152,6 +155,8 @@ public abstract class NodeSourceWindow {
     private String waitingMessage;
 
     private LinkedHashMap<String, String> fullPolicyValueMap;
+
+    private RadioGroupItem radioGroupItem;
 
     protected NodeSourceWindow(RMController controller, String windowTitle, String waitingMessage) {
         this.controller = controller;
@@ -239,6 +244,24 @@ public abstract class NodeSourceWindow {
         nodeSourceWindowForm.setFields(this.nodeSourceNameText);
         nodeSourceWindowForm.setTitleSuffix("");
         createNodeSourceLayout.addMember(nodeSourceWindowForm);
+
+        radioGroupItem = new RadioGroupItem();
+        radioGroupItem.setName("advanced");
+        radioGroupItem.setColSpan("*");
+        radioGroupItem.setRequired(true);
+        radioGroupItem.setVertical(false);
+        radioGroupItem.setValueMap("Yes", "No");
+        radioGroupItem.setDefaultValue("No");
+        radioGroupItem.setRedrawOnChange(true);
+        radioGroupItem.setTitle("Advanced configuration");
+        //        radioGroupItem.addChangedHandler(changedEvent -> resetFormForInfrastructureSelectChange());
+
+        DynamicForm radioGroupItemForm = new DynamicForm();
+        radioGroupItemForm.setWidth100();
+        radioGroupItemForm.setHeight("30px");
+        radioGroupItemForm.setFields(radioGroupItem);
+        radioGroupItemForm.setTitleSuffix("");
+        createNodeSourceLayout.addMember(radioGroupItemForm);
 
         Label importantFieldsLabel = new Label();
         importantFieldsLabel.setHeight("20px");
@@ -348,6 +371,13 @@ public abstract class NodeSourceWindow {
 
             afterItemsCreation();
 
+            //            this.nodeSourcePluginsForm.setFields(formItemsByName
+            //                    .entrySet()
+            //                    .stream()
+            //                    .filter(e -> !e.getKey().contains("advanced"))
+            //                    .map(Map.Entry::getValue)
+            //                    .flatMap(Collection::stream)
+            //                    .toArray(FormItem[]::new));
             this.nodeSourcePluginsForm.setFields(this.formItemsByName.values()
                                                                      .stream()
                                                                      .flatMap(Collection::stream)
@@ -420,12 +450,15 @@ public abstract class NodeSourceWindow {
     private void resetFormForInfrastructureSelectChange() {
         String policyPluginName = this.policySelectItem.getValueAsString();
         warnForUploadFiles(policyPluginName);
-        if (this.previousSelectedInfrastructure != null) {
+        if (this.previousSelectedInfrastructure != null && !previousSelectedInfrastructure.isEmpty()) {
             for (FormItem formItem : this.formItemsByName.get(this.previousSelectedInfrastructure)) {
                 formItem.hide();
             }
         }
         String infrastructurePluginName = this.infrastructureSelectItem.getValueAsString();
+        //        if (radioGroupItem.getValueAsString().equals("Yes")) {
+        //            infrastructurePluginName += "advanced";
+        //        }
         for (FormItem formItem : this.formItemsByName.get(infrastructurePluginName)) {
             formItem.show();
         }
@@ -461,21 +494,26 @@ public abstract class NodeSourceWindow {
     }
 
     private void hideAllPluginFormItems() {
+        int c = 0;
         for (List<FormItem> li : this.formItemsByName.values()) {
             // if there are more than one element in the list, it means that
             // those form items belong to a specific plugin
             if (li.size() > 1) {
                 for (FormItem it : li) {
                     it.hide();
+                    ++c;
                 }
             }
         }
+        int size = formItemsByName.values().stream().flatMap(Collection::stream).collect(Collectors.toList()).size();
+        LogModel.getInstance().logCriticalMessage("size " + size + " c " + c);
     }
 
     private void prepareFormItems() {
         this.infrastructureSelectItem = new SelectItem(INFRASTRUCTURE_FORM_KEY, "Infrastructure");
         this.infrastructureSelectItem.setRequired(true);
         this.infrastructureSelectItem.setWidth(300);
+
         this.policySelectItem = new SelectItem(POLICY_FORM_KEY, "Policy");
         this.policySelectItem.setRequired(true);
         this.policySelectItem.setWidth(300);
@@ -523,10 +561,18 @@ public abstract class NodeSourceWindow {
             selectItemValues.put(pluginDescriptor.getPluginName(), shortName);
             List<FormItem> currentPluginFormItems = getPrefilledFormItems(pluginDescriptor);
             this.formItemsByName.put(pluginDescriptor.getPluginName(), currentPluginFormItems);
+
+            List<FormItem> currentPluginFormItemsAdvanced = getPrefilledFormItems(pluginDescriptor, true);
+            this.formItemsByName.put(pluginDescriptor.getPluginName() + "advanced", currentPluginFormItemsAdvanced);
+
         }
     }
 
     private List<FormItem> getPrefilledFormItems(PluginDescriptor plugin) {
+        return getPrefilledFormItems(plugin, false);
+    }
+
+    private List<FormItem> getPrefilledFormItems(PluginDescriptor plugin, boolean important) {
         List<PluginDescriptor.Field> pluginFields = plugin.getConfigurableFields()
                                                           .stream()
                                                           .sorted(Comparator.comparing(PluginDescriptor.Field::getSectionSelector))
@@ -567,9 +613,15 @@ public abstract class NodeSourceWindow {
         if ("true".equalsIgnoreCase(plugin.getMeta().get("elastic"))) {
             allFormItems.add(createElasticLabel(plugin));
         }
-        for (PluginDescriptor.Field pluginField : pluginFields) {
+
+        final List<PluginDescriptor.Field> filteredFields = pluginFields.stream()
+                                                                        .filter(field -> !important ||
+                                                                                         field.isImportant())
+                                                                        .collect(Collectors.toList());
+
+        for (PluginDescriptor.Field pluginField : filteredFields) {
             currentSectionSelector = possiblyAddSection(plugin,
-                                                        pluginFields,
+                                                        filteredFields,
                                                         allFormItems,
                                                         currentSectionSelector,
                                                         pluginField);
